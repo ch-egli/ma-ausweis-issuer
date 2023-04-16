@@ -2,13 +2,30 @@ spring:
   web:
     resources:
       static-locations: classpath:/static
+  security:
+    oauth2:
+      client:
+        registration:
+          azure-ad:
+            client-id: ${APP_CLIENT_ID}
+            client-secret: ${APP_CLIENT_SECRET}
+            client-name: Azure AD (Snoopfish Tenant)
+            scope: openid
+        provider:
+          azure-ad:
+            issuer-uri: https://login.microsoftonline.com/28b0ff13-7312-4545-b9d3-eb9df15d8e44/v2.0
+
+logging:
+  level:
+    ch.sbb.iam: INFO
+    org.springframework.security: INFO
 
 aadvc_ApiEndpoint: https://verifiedid.did.msidentity.com/v1.0/
 aadvc_Authority: https://login.microsoftonline.com/{0}
 aadvc_scope: 3db474b9-6a0c-4840-96ac-1fceb342124f/.default
 aadvc_TenantId: ${TENANT_ID}
-aadvc_ClientId: ${CLIENT_ID}
-aadvc_ClientSecret: ${CLIENT_SECRET}
+aadvc_ClientId: ${VC_CLIENT_ID}
+aadvc_ClientSecret: ${VC_CLIENT_SECRET}
 
 aadvc_ApiKey: ${TENANT_ID:dummyApiKey}
 aadvc_CacheExpiresInSeconds: 300
