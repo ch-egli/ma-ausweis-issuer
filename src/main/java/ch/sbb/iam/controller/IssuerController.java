@@ -17,6 +17,7 @@ import java.nio.file.Paths;
 import java.util.Base64;
 import java.util.Collections;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
@@ -29,6 +30,9 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.core.oidc.user.DefaultOidcUser;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -281,16 +285,27 @@ public class IssuerController {
                     ((ObjectNode)(rootNode.path("pin"))).put("value", pinCode );
                 }
             }
-            // here you could change the payload manifest and change the firstname and lastname. The fieldNames should match your Rules definition
+
+            // get user info from security context an add to VC request payload
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            Object principal = authentication.getPrincipal();
+            String givenName = "DefaultGivenName";
+            String familyName = "DefaultFamilyName";
+            if (principal instanceof DefaultOidcUser) {
+                Map<String, Object> userClaims = ((DefaultOidcUser) principal).getUserInfo().getClaims();
+                givenName = (String) userClaims.get("given_name");
+                familyName = (String) userClaims.get("family_name");
+            }
             if ( rootNode.has("claims") ) {
                 ObjectNode claims = ((ObjectNode)rootNode.path("claims"));
                 if ( claims.has("given_name") ) {
-                    claims.put("given_name", "Christian" );
+                    claims.put("given_name", givenName );
                 }
                 if ( claims.has("family_name") ) {
-                    claims.put("family_name", "Egli" );
+                    claims.put("family_name", familyName );
                 }
             }
+
             // The VC Request API is an authenticated API. We need to clientid and secret to create an access token which
             // needs to be send as bearer to the VC Request API
             payload = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(rootNode);
